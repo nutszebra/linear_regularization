@@ -118,21 +118,21 @@ class Wide_ResNet(NN):
             beta = torch.Tensor([beta]).to(x.device)
 
         out = self.conv1(x)
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = F.relu(self.bn1(out))
+        out1 = self.layer1(out)
+        out2 = self.layer2(out1)
+        out3 = self.layer3(out2)
+        out = F.relu(self.bn1(out3))
         out = F.adaptive_avg_pool2d(out, (1, 1))
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         if self.training is True:
-            return out, beta
+            return out, out3, out2, out1, x, beta
         else:
             return out
 
     def calc_loss(self, y, t, reduction='elementwise_mean'):
         if self.training is True:
-            p, beta = y
+            p, out3, out2, out1, x, beta = y
             t2 = self.flip(t.view(-1, int(p.shape[0] / beta.shape[0])), 1).view(-1)
             beta = beta.unsqueeze(1).repeat(1, int(p.shape[0] / beta.shape[0])).view(-1)
             loss = (beta * F.cross_entropy(p, t, reduction='none') + (1.0 - beta) * F.cross_entropy(p, t2, reduction='none')).mean()
