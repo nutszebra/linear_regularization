@@ -159,8 +159,6 @@ class Wide_ResNet(NN):
             _p, _out3, _out2, _out1, _x, _beta = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
             self.train()
             loss_linear = 0.0
-            import IPython
-            IPython.embed()
             _out3_1, _out3_2, _out3_mix = _out3[:x.shape[0]], _out3[x.shape[0]: int(x.shape[0] * 2)], _out3[int(x.shape[0] * 2):]
             _out3_1, _out3_2, _out3_mix = self.channel(_out3_1), self.channel(_out3_2), self.channel(_out3_mix)
             # loss_linear = loss_linear + self.alpha * F.mse_loss(_out3_1 + _out3_2, _out3_mix) 
