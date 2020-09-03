@@ -116,6 +116,8 @@ class Wide_ResNet(NN):
         if (self.training is True) and (mixup is True):
             x, beta = self.mixup(x)
             beta = torch.Tensor([beta]).to(x.device)
+        else:
+            beta = torch.Tensor([0.0]).to(x.device)
 
         out = self.conv1(x)
         out1 = self.layer1(out)
@@ -125,7 +127,7 @@ class Wide_ResNet(NN):
         out = F.adaptive_avg_pool2d(out, (1, 1))
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        if (self.training is True) and (mixup is True):
+        if self.training is True:
             return out, out3, out2, out1, x, beta
         else:
             return out
@@ -138,7 +140,7 @@ class Wide_ResNet(NN):
             loss = (beta * F.cross_entropy(p, t, reduction='none') + (1.0 - beta) * F.cross_entropy(p, t2, reduction='none')).mean()
             import IPython
             IPython.embed()
-            x1, x2 = beta * x, (1.0 - beta) * x
+            x1, x2 = beta.view(-1, 1, 1, 1) * x, (1.0 - beta.view(-1, 1, 1, 1)) * x
             x_mix = x1 + x2
             self.eval()
             _y = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
