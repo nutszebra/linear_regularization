@@ -132,6 +132,17 @@ class Wide_ResNet(NN):
         else:
             return out
 
+    @staticmethod
+    def cosine(z1, z2, eps=1.0e-8):
+        return ((z1 * z2) / (torch.norm(z1, dim=1) * torch.norm(z2, dim=1) + eps).unsqueeze(1)).sum(1).mean()
+
+    @staticmethod
+    def l2loss(z1, z2, eps=1.0e-8):
+        z1_norm = z1 / (torch.norm(z1, dim=1) + eps).view(-1, 1)
+        z2_norm = z2 / (torch.norm(z2, dim=1) + eps).view(-1, 1)
+        loss = ((z1_norm - z2_norm) ** 2).sum(1).mean()
+        return loss
+
     def calc_loss(self, y, t, reduction='elementwise_mean'):
         if self.training is True:
             p, out3, out2, out1, x, beta = y
@@ -144,6 +155,8 @@ class Wide_ResNet(NN):
             _p, _out3, _out2, _out1, _x, _beta = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
             self.train()
             loss_linear = 0.0
+            import IPython
+            IPython.embed()
             _out3_1, _out3_2, _out3_mix = _out3[:x.shape[0]], _out3[x.shape[0]: int(x.shape[0] * 2)], _out3[int(x.shape[0] * 2):]
             loss_linear = loss_linear + self.alpha * F.mse_loss(_out3_1 + _out3_2, _out3_mix) 
             _out2_1, _out2_2, _out2_mix = _out2[:x.shape[0]], _out2[x.shape[0]: int(x.shape[0] * 2)], _out2[int(x.shape[0] * 2):]
