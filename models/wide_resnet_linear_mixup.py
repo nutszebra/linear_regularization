@@ -65,10 +65,10 @@ class wide_basic(NN):
 
 class Wide_ResNet(NN):
 
-    def __init__(self, depth, widen_factor, dropout_rate, num_classes, beta=1.0, base=16, name=None):
+    def __init__(self, depth, widen_factor, dropout_rate, num_classes, alpha=1.0, beta=1.0, base=16, name=None):
         super(Wide_ResNet, self).__init__()
         self.in_planes, self.num_classes = base, num_classes
-        self.beta = beta
+        self.alpha, self.beta = alpha, beta
 
         assert ((depth - 4) % 6 == 0), 'Wide-resnet depth should be 6n+4'
         n = (depth - 4) / 6
@@ -111,9 +111,9 @@ class Wide_ResNet(NN):
                                     dtype=torch.long, device=x.device)
         return x[tuple(indices)]
 
-    def forward(self, x, t=None):
+    def forward(self, x, t=None, mixup=True):
 
-        if self.training is True:
+        if (self.training is True) and (mixup is True):
             x, beta = self.mixup(x)
             beta = torch.Tensor([beta]).to(x.device)
 
@@ -125,7 +125,7 @@ class Wide_ResNet(NN):
         out = F.adaptive_avg_pool2d(out, (1, 1))
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        if self.training is True:
+        if (self.training is True) and (mixup is True):
             return out, out3, out2, out1, x, beta
         else:
             return out
@@ -138,6 +138,11 @@ class Wide_ResNet(NN):
             loss = (beta * F.cross_entropy(p, t, reduction='none') + (1.0 - beta) * F.cross_entropy(p, t2, reduction='none')).mean()
             import IPython
             IPython.embed()
+            x1, x2 = beta * x, (1.0 - beta) * x
+            x_mix = x1 + x2
+            self.eval()
+            _y = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
+            self.train()
         else:
             loss = F.cross_entropy(y, t)
         return loss
