@@ -127,7 +127,7 @@ class Wide_ResNet(NN):
         out = F.adaptive_avg_pool2d(out, (1, 1))
         out = out.view(out.size(0), -1)
         out = self.linear(out)
-        if self.training is True:
+        if self.training is True or (mixup is False):
             return out, out3, out2, out1, x, beta
         else:
             return out
