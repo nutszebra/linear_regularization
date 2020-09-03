@@ -65,10 +65,10 @@ class wide_basic(NN):
 
 class Wide_ResNet(NN):
 
-    def __init__(self, depth, widen_factor, dropout_rate, num_classes, alpha=0.01, beta=1.0, base=16, name=None):
+    def __init__(self, depth, widen_factor, dropout_rate, num_classes, beta=1.0, base=16, name=None):
         super(Wide_ResNet, self).__init__()
         self.in_planes, self.num_classes = base, num_classes
-        self.alpha, self.beta = alpha, beta
+        self.beta = beta
 
         assert ((depth - 4) % 6 == 0), 'Wide-resnet depth should be 6n+4'
         n = (depth - 4) / 6
@@ -132,8 +132,6 @@ class Wide_ResNet(NN):
 
     def calc_loss(self, y, t, reduction='elementwise_mean'):
         if self.training is True:
-            import IPython
-            IPython.embed()
             p, beta = y
             t2 = self.flip(t.view(-1, int(p.shape[0] / beta.shape[0])), 1).view(-1)
             beta = beta.unsqueeze(1).repeat(1, int(p.shape[0] / beta.shape[0])).view(-1)
