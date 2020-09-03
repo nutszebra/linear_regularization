@@ -143,6 +143,10 @@ class Wide_ResNet(NN):
         loss = ((z1_norm - z2_norm) ** 2).sum(1).mean()
         return loss
 
+    @staticmethod
+    def channel(z, dim=1):
+        return z.transpose(dim, -1).contiguous().view(-1, z.shape[dim])
+
     def calc_loss(self, y, t, reduction='elementwise_mean'):
         if self.training is True:
             p, out3, out2, out1, x, beta = y
@@ -158,11 +162,17 @@ class Wide_ResNet(NN):
             import IPython
             IPython.embed()
             _out3_1, _out3_2, _out3_mix = _out3[:x.shape[0]], _out3[x.shape[0]: int(x.shape[0] * 2)], _out3[int(x.shape[0] * 2):]
-            loss_linear = loss_linear + self.alpha * F.mse_loss(_out3_1 + _out3_2, _out3_mix) 
+            _out3_1, _out3_2, _out3_mix = self.channel(_out3_1), self.channel(_out3_2), self.channel(_out3_mix)
+            # loss_linear = loss_linear + self.alpha * F.mse_loss(_out3_1 + _out3_2, _out3_mix) 
+            loss_linear = loss_linear + self.alpha * self.l2loss(_out3_1 + _out3_2, _out3_mix) 
             _out2_1, _out2_2, _out2_mix = _out2[:x.shape[0]], _out2[x.shape[0]: int(x.shape[0] * 2)], _out2[int(x.shape[0] * 2):]
-            loss_linear = loss_linear + self.alpha * F.mse_loss(_out2_1 + _out2_2, _out2_mix) 
+            _out2_1, _out2_2, _out2_mix = self.channel(_out2_1), self.channel(_out2_2), self.channel(_out2_mix)
+            # loss_linear = loss_linear + self.alpha * F.mse_loss(_out2_1 + _out2_2, _out2_mix) 
+            loss_linear = loss_linear + self.alpha * self.l2loss(_out2_1 + _out2_2, _out2_mix) 
             _out1_1, _out1_2, _out1_mix = _out1[:x.shape[0]], _out1[x.shape[0]: int(x.shape[0] * 2)], _out1[int(x.shape[0] * 2):]
-            loss_linear = loss_linear + self.alpha * F.mse_loss(_out1_1 + _out1_2, _out1_mix) 
+            _out1_1, _out1_2, _out1_mix = self.channel(_out1_1), self.channel(_out1_2), self.channel(_out1_mix)
+            # loss_linear = loss_linear + self.alpha * F.mse_loss(_out1_1 + _out1_2, _out1_mix) 
+            loss_linear = loss_linear + self.alpha * self.l2loss(_out1_1 + _out1_2, _out1_mix) 
             loss = loss + loss_linear
         else:
             loss = F.cross_entropy(y, t)
