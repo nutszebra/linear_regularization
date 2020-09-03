@@ -138,13 +138,19 @@ class Wide_ResNet(NN):
             t2 = self.flip(t.view(-1, int(p.shape[0] / beta.shape[0])), 1).view(-1)
             beta = beta.unsqueeze(1).repeat(1, int(p.shape[0] / beta.shape[0])).view(-1)
             loss = (beta * F.cross_entropy(p, t, reduction='none') + (1.0 - beta) * F.cross_entropy(p, t2, reduction='none')).mean()
-            import IPython
-            IPython.embed()
             x1, x2 = beta.view(-1, 1, 1, 1) * x, (1.0 - beta.view(-1, 1, 1, 1)) * x
             x_mix = x1 + x2
             self.eval()
-            _y = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
+            _p, _out3, _out2, _out1, _x, _beta = self(torch.cat((x1, x2, x_mix), 0), mixup=False)
             self.train()
+            loss_linear = 0.0
+            _out3_1, _out3_2, _out3_mix = _out3[:x.shape[0]], _out3[x.shape[0]: int(x.shape[0] * 2)], _out3[int(x.shape[0] * 2):]
+            loss_linear = loss_linear + self.alpha * F.mse_loss(_out3_1 + _out3_2, _out3_mix) 
+            _out2_1, _out2_2, _out2_mix = _out2[:x.shape[0]], _out2[x.shape[0]: int(x.shape[0] * 2)], _out2[int(x.shape[0] * 2):]
+            loss_linear = loss_linear + self.alpha * F.mse_loss(_out2_1 + _out2_2, _out2_mix) 
+            _out1_1, _out1_2, _out1_mix = _out1[:x.shape[0]], _out1[x.shape[0]: int(x.shape[0] * 2)], _out1[int(x.shape[0] * 2):]
+            loss_linear = loss_linear + self.alpha * F.mse_loss(_out1_1 + _out1_2, _out1_mix) 
+            loss = loss + loss_linear
         else:
             loss = F.cross_entropy(y, t)
         return loss
