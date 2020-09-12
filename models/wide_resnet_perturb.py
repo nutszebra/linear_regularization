@@ -101,8 +101,8 @@ class Wide_ResNet(NN):
 
     def forward(self, x):
         if self.training is True:
-            import IPython
-            IPython.embed()
+            perturb = torch.rand(x.shape, device=x.device) / 255.  - 1.0 / 255 / 2
+            x = x + perturb
         out = self.conv1(x)
         out = self.layer1(out)
         out = self.layer2(out)
