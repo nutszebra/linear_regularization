@@ -104,7 +104,8 @@ class Wide_ResNet(NN):
         if self.training is True:
             perturb = torch.rand(x.shape, device=x.device) / 255.  - 1.0 / 255 / 2
             x = x + perturb
-        x = torch.tanh(self.alpha * (x - 0.5))
+        # x = torch.tanh(self.alpha * (x - 0.5))
+        x = self.alpha * x
         out = self.conv1(x)
         out = self.layer1(out)
         out = self.layer2(out)
