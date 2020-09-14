@@ -102,9 +102,9 @@ class Wide_ResNet(NN):
 
     def forward(self, x):
         if self.training is True:
-            perturb = torch.rand(x.shape, device=x.device) / 255.  - 1.0 / 255 / 2
+            perturb = torch.rand(x.shape, device=x.device) / 255.
             x = x + perturb
-        x = torch.tanh(self.alpha * (x - 0.5))
+        x = torch.exp(self.alpha * x)
         # x = self.alpha * x
         out = self.conv1(x)
         out = self.layer1(out)
