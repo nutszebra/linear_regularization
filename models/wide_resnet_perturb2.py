@@ -105,9 +105,8 @@ class Wide_ResNet(NN):
             perturb = torch.rand(x.shape, device=x.device) / 255.
             x = x + perturb
         # x = torch.exp(self.alpha * x) - 1.0
-        x = -x + 1
-        import IPython
-        IPython.embed()
+        # x = -x + 1
+        x = torch.cat((x[:, 0:1] - x[:, 1:2], x[:, 1:2] - x[:, 2:3], x[:, 0:1] - x[:, 2:3]), axis=1)
         # x = self.alpha * x
         out = self.conv1(x)
         out = self.layer1(out)
