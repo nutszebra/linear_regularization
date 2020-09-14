@@ -106,6 +106,8 @@ class Wide_ResNet(NN):
             x = x + perturb
         # x = torch.exp(self.alpha * x) - 1.0
         x = -x + 1
+        import IPython
+        IPython.embed()
         # x = self.alpha * x
         out = self.conv1(x)
         out = self.layer1(out)
