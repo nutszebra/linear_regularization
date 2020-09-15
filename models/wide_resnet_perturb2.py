@@ -65,10 +65,10 @@ class wide_basic(NN):
 
 class Wide_ResNet(NN):
 
-    def __init__(self, depth, widen_factor, dropout_rate, num_classes, base=16, alpha=1.0, name=None):
+    def __init__(self, depth, widen_factor, dropout_rate, num_classes, base=16, alpha=1.0, beta=1.0, name=None):
         super(Wide_ResNet, self).__init__()
         self.in_planes, self.num_classes = base, num_classes
-        self.alpha = alpha
+        self.alpha, self.beta = alpha, beta
 
         assert ((depth - 4) % 6 == 0), 'Wide-resnet depth should be 6n+4'
         n = (depth - 4) / 6
@@ -106,7 +106,7 @@ class Wide_ResNet(NN):
             x = x + perturb
         # x = torch.exp(self.alpha * x) - 1.0
         x = (-x + 1) - 0.5
-        x = torch.tanh(self.alpha * x)
+        x = self.beta * torch.tanh(self.alpha * x)
         # x = torch.cat((x[:, 0:1] - x[:, 1:2], x[:, 1:2] - x[:, 2:3], x[:, 0:1] - x[:, 2:3]), axis=1)
         # x = self.alpha * x
         out = self.conv1(x)
